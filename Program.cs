@@ -1,55 +1,55 @@
-﻿public abstract class Beverage
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public abstract class Beverage
 {
-    public string Description { get; set; }
+    public abstract string Description { get; }
     public abstract double Cost { get; }
 }
 
 public class Espresso : Beverage
 {
-    public Espresso()
-    {
-        Description = "Espresso";
-    }
+    public override string Description => "Espresso";
 
     public override double Cost => 1.99;
 }
 
 public class HouseBlend : Beverage
 {
-    public HouseBlend()
-    {
-        Description = "House Blend Coffee";
-    }
+    public override string Description => "House Blend Coffee";
 
     public override double Cost => 0.89;
 }
 
 public abstract class CondimentDecorator : Beverage
 {
-    protected Beverage _beverage;
-
-    public CondimentDecorator(Beverage beverage)
-    {
-        _beverage = beverage;
-    }
 }
 
 public class Whip : CondimentDecorator
 {
-    public Whip(Beverage beverage) : base(beverage)
+    private readonly Beverage _beverage;
+
+    public Whip(Beverage beverage)
     {
-        Description = _beverage.Description + ", Whip";
+        _beverage = beverage;
     }
+
+    public override string Description => _beverage.Description + ", Whip";
 
     public override double Cost => _beverage.Cost + 0.10;
 }
 
 public class Mocha : CondimentDecorator
 {
-    public Mocha(Beverage beverage) : base(beverage)
+    private readonly Beverage _beverage;
+
+    public Mocha(Beverage beverage)
     {
-        Description = _beverage.Description + ", Mocha";
+        _beverage = beverage;
     }
+
+    public override string Description => _beverage.Description + ", Mocha";
 
     public override double Cost => _beverage.Cost + 0.20;
 }
@@ -58,7 +58,8 @@ public class StarbuzzCoffee
 {
     static void Main(string[] args)
     {
-        Beverage beverage = null;
+        List<Order> orders = new List<Order>();
+        double totalOrder = 0.0;
 
         while (true)
         {
@@ -69,57 +70,89 @@ public class StarbuzzCoffee
 
             var choice = Console.ReadLine();
 
-            switch (choice)
+            if (choice == "3")
             {
-                case "1":
-                    beverage = new Espresso();
-                    break;
-                case "2":
-                    beverage = new HouseBlend();
-                    break;
-                case "3":
-                    Console.WriteLine("Goodbye!");
-                    return;
-                default:
-                    Console.WriteLine("Invalid choice.");
-                    break;
+                Console.WriteLine("Goodbye!");
+                break;
             }
 
-            if (beverage != null)
+            if (choice != "1" && choice != "2")
             {
-                while (true)
+                Console.WriteLine("Invalid choice.");
+                continue;
+            }
+
+            Beverage beverage = null;
+            if (choice == "1")
+            {
+                beverage = new Espresso();
+            }
+            else if (choice == "2")
+            {
+                beverage = new HouseBlend();
+            }
+
+            List<CondimentDecorator> condiments = new List<CondimentDecorator>();
+
+            while (true)
+            {
+                Console.WriteLine("Select a condiment:");
+                Console.WriteLine("1. Whip");
+                Console.WriteLine("2. Mocha");
+                Console.WriteLine("3. Done");
+
+                var condimentChoice = Console.ReadLine();
+
+                if (condimentChoice == "3")
                 {
-                    Console.WriteLine("Select a condiment:");
-                    Console.WriteLine("1. Whip");
-                    Console.WriteLine("2. Mocha");
-                    Console.WriteLine("3. Done");
+                    break;
+                }
 
-                    var condimentChoice = Console.ReadLine();
+                if (condimentChoice != "1" && condimentChoice != "2")
+                {
+                    Console.WriteLine("Invalid choice.");
+                    continue;
+                }
 
-                    switch (condimentChoice)
-                    {
-                        case "1":
-                            beverage = new Whip(beverage);
-                            break;
-                        case "2":
-                            beverage = new Mocha(beverage);
-                            break;
-                        case "3":
-                            Console.WriteLine("Your beverage:");
-                            Console.WriteLine(beverage.Description);
-                            Console.WriteLine("Total cost: $" + beverage.Cost);
-                            break;
-                        default:
-                            Console.WriteLine("Invalid choice.");
-                            break;
-                    }
-
-                    if (condimentChoice == "3")
-                    {
-                        break;
-                    }
+                if (condimentChoice == "1")
+                {
+                    beverage = new Whip(beverage);
+                }
+                else if (condimentChoice == "2")
+                {
+                    beverage = new Mocha(beverage);
                 }
             }
+
+            orders.Add(new Order(beverage));
+
+            totalOrder += beverage.Cost;
         }
+
+        Console.WriteLine("Order Summary:");
+        foreach (var order in orders)
+        {
+            Console.WriteLine("Beverage: " + order.Beverage.Description);
+            Console.WriteLine("Total Cost: $" + order.Beverage.Cost);
+            Console.WriteLine();
+        }
+
+        double ivaRate = 0.16;
+        double iva = totalOrder * ivaRate;
+        double totalWithIVA = totalOrder + iva;
+
+        Console.WriteLine("Subtotal: $" + totalOrder.ToString("0.00"));
+        Console.WriteLine("IVA (16%): $" + iva.ToString("0.00"));
+        Console.WriteLine("Total final: $" + totalWithIVA.ToString("0.00"));
+    }
+}
+
+public class Order
+{
+    public Beverage Beverage { get; }
+
+    public Order(Beverage beverage)
+    {
+        Beverage = beverage;
     }
 }
